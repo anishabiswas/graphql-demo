@@ -2,17 +2,19 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
-import { ApolloProvider, ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
 
 const client = new ApolloClient({
-  uri: "https://countries.trevorblades.com/", // GraphQL endpoint
+  // uri: "https://countries.trevorblades.com/", // GraphQL endpoint
+  link: new HttpLink({ uri: "https://countries.trevorblades.com/" }),
   cache: new InMemoryCache(),
 });
 
 createRoot(document.getElementById("root")).render(
-  <ApolloProvider client={client}>
-    <StrictMode>
+  <StrictMode>
+    <ApolloProvider client={client}>
       <App />
-    </StrictMode>
-  </ApolloProvider>
+    </ApolloProvider>
+  </StrictMode>
 );
