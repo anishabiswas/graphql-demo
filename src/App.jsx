@@ -1,73 +1,81 @@
+import { useState } from "react";
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 
 const GET_COUNTRIES = gql`
-  query getcountries {
+  query {
     countries {
-      name
-      capital
-      continent {
-        name
-      }
-      languages {
-        name
-      }
       code
-    }
-    country(code: "IN") {
       name
-      capital
-      emoji
     }
   }
 `;
 
-// const GET_COUNTRY_BY_CODE = gql`
-//   query getCountry {
-//     country(code: "IN") {
-//       name
-//       capital
-//       emoji
-//     }
-//   }
-// `;
+const GET_COUNTRY = gql`
+  query GetCountry($code: ID!) {
+    country(code: $code) {
+      name
+      capital
+      emoji
+      currency
+    }
+  }
+`;
 
 function App() {
-  const { loading, error, data } = useQuery(GET_COUNTRIES);
-  //const { countryLoading, countryError, countryData } = useQuery(GET_COUNTRY_BY_CODE);
+  const [selectedCode, setSelectedCode] = useState("");
 
-  if (loading) return <p>Loading....</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  // 1. Get all countries for dropdown
+  const {
+    loading: countriesLoading,
+    error: countriesError,
+    data: countriesData,
+  } = useQuery(GET_COUNTRIES);
+
+  // 2. Fetch single country only when selected
+  const {
+    loading: countryLoading,
+    error: countryError,
+    data: countryData,
+  } = useQuery(GET_COUNTRY, {
+    variables: { code: selectedCode },
+    skip: !selectedCode, // ✅ don’t run until user picks one
+  });
+
+  if (countriesLoading) return <p>Loading countries…</p>;
+  if (countriesError) return <p>Error: {countriesError.message}</p>;
 
   return (
     <div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Capital</th>
-            <th>Continent</th>
-            <th>Language</th>
-            <th>code</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.countries.map((country) => (
-            <tr key={country.code}>
-              <td>{country.name}</td>
-              <td>{country.capital}</td>
-              <td>{country.continent.name}</td>
-              <td>{country.languages.map((lang) => lang.name).join(", ")}</td>
-              <td>{country.code}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <h1>Country Details</h1>
-      <h2>
-        {data.country.name} {data.country.emoji}
-      </h2>
-      <h3>{data.country.capital}</h3>
+      <h2>Select a Country</h2>
+      <select
+        value={selectedCode}
+        onChange={(e) => setSelectedCode(e.target.value)}
+      >
+        <option value="">-- Choose a country --</option>
+        {countriesData.countries.map((c) => (
+          <option key={c.code} value={c.code}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+
+      {selectedCode && (
+        <div>
+          <h2>Country Details</h2>
+          {countryLoading && <p>Loading country details…</p>}
+          {countryError && <p>Error: {countryError.message}</p>}
+          {countryData && (
+            <div>
+              <p>
+                {countryData.country.name} {countryData.country.emoji}
+              </p>
+              <p>Capital: {countryData.country.capital}</p>
+              <p>Currency: {countryData.country.currency}</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
