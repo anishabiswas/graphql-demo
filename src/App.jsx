@@ -2,24 +2,32 @@ import { useState } from "react";
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 
+const COUNTRY_FIELDS = gql`
+  fragment CountryFields on Country {
+    name
+    capital
+  }
+`;
+
 const GET_COUNTRIES = gql`
   query {
     countries {
       code
-      name
+      ...CountryFields
     }
   }
+  ${COUNTRY_FIELDS}
 `;
 
 const GET_COUNTRY = gql`
   query GetCountry($code: ID!) {
     country(code: $code) {
-      name
-      capital
+      ...CountryFields
       emoji
       currency
     }
   }
+  ${COUNTRY_FIELDS}
 `;
 
 function App() {
